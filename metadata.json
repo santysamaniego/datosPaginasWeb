@@ -1,0 +1,5 @@
+{
+  "name": "WebDev CRM",
+  "description": "A minimalist CRM for web development leads management, integrated with Firebase.",
+  "requestFramePermissions": []
+}
