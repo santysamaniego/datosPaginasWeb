@@ -22,6 +22,8 @@ export interface Contact {
   firstContactDate: string;
   observations: string;
   websiteUrl?: string; // For finished jobs
+  salePrice?: number;
+  saleDate?: string;
   createdAt: number;
   createdBy: string; // User ID or Email
 }
@@ -55,6 +57,9 @@ export const SECTOR_CATEGORIES = {
   ],
   'Hoteles y Albergues': [
     'ALBERGUES TRANSITORIOS', 'HOTEL ALOJAMIENTO'
+  ],
+  'Eventos': [
+    'QUINCEAÑERAS'
   ],
   'Otros': []
 } as const;

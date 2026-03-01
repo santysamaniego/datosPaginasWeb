@@ -1,11 +1,12 @@
 import React from 'react';
-import { Contact, ContactStatus, SECTOR_CATEGORIES } from '../types';
+import { Contact, ContactStatus, SECTOR_CATEGORIES, User } from '../types';
 import { X, Globe } from 'lucide-react';
 
 interface ContactFormProps {
   onSubmit: (contact: Omit<Contact, 'id' | 'createdAt'>) => void;
   initialData?: Contact;
   onClose: () => void;
+  currentUser: User;
 }
 
 const STATUS_OPTIONS: ContactStatus[] = [
@@ -17,20 +18,23 @@ const STATUS_OPTIONS: ContactStatus[] = [
   'Cliente'
 ];
 
-export const ContactForm: React.FC<ContactFormProps> = ({ onSubmit, initialData, onClose }) => {
+export const ContactForm: React.FC<ContactFormProps> = ({ onSubmit, initialData, onClose, currentUser }) => {
   const [formData, setFormData] = React.useState<Omit<Contact, 'id' | 'createdAt'>>({
-    businessName: initialData?.businessName || '',
-    sector: initialData?.sector || '',
-    category: initialData?.category || '',
-    zone: initialData?.zone || '',
-    instagram: initialData?.instagram || '',
-    phone: initialData?.phone || '',
-    email: initialData?.email || '',
-    status: initialData?.status || 'Pendiente',
-    firstContactDate: initialData?.firstContactDate || new Date().toISOString().split('T')[0],
-    observations: initialData?.observations || '',
-    websiteUrl: initialData?.websiteUrl || ''
-  });
+  businessName: initialData?.businessName || '',
+  sector: initialData?.sector || '',
+  category: initialData?.category || '',
+  zone: initialData?.zone || '',
+  instagram: initialData?.instagram || '',
+  phone: initialData?.phone || '',
+  email: initialData?.email || '',
+  status: initialData?.status || 'Pendiente',
+  firstContactDate: initialData?.firstContactDate || new Date().toISOString().split('T')[0],
+  observations: initialData?.observations || '',
+  websiteUrl: initialData?.websiteUrl || '',
+  salePrice: initialData?.salePrice,
+  saleDate: initialData?.saleDate || new Date().toISOString().split('T')[0],
+  createdBy: initialData?.createdBy || currentUser.id 
+});
 
   const [isCustomSector, setIsCustomSector] = React.useState(false);
   const [customSector, setCustomSector] = React.useState('');
@@ -190,7 +194,7 @@ export const ContactForm: React.FC<ContactFormProps> = ({ onSubmit, initialData,
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Fecha Primer Contacto</label>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Fecha</label>
               <input
                 type="date"
                 value={formData.firstContactDate}
@@ -201,17 +205,46 @@ export const ContactForm: React.FC<ContactFormProps> = ({ onSubmit, initialData,
           </div>
 
           {formData.status === 'Cliente' && (
-            <div className="mt-4 space-y-1">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1">
-                <Globe size={12} /> Link de la Web Creada
-              </label>
-              <input
-                type="url"
-                value={formData.websiteUrl}
-                onChange={e => setFormData({ ...formData, websiteUrl: e.target.value })}
-                className="w-full px-4 py-2 bg-blue-50 border border-blue-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                placeholder="https://www.ejemplo.com"
-              />
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-blue-50/50 rounded-xl border border-blue-100">
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-blue-600 uppercase tracking-wider flex items-center gap-1">
+                  <Globe size={12} /> Link de la Web
+                </label>
+                <input
+                  type="url"
+                  value={formData.websiteUrl}
+                  onChange={e => setFormData({ ...formData, websiteUrl: e.target.value })}
+                  className="w-full px-4 py-2 bg-white border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  placeholder="https://..."
+                />
+              </div>
+              {currentUser.role === 'Admin' && (
+                <>
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-blue-600 uppercase tracking-wider flex items-center gap-1">
+                      $ Precio de Venta
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.salePrice || ''}
+                      onChange={e => setFormData({ ...formData, salePrice: Number(e.target.value) })}
+                      className="w-full px-4 py-2 bg-white border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                      placeholder="Ej: 50000"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-blue-600 uppercase tracking-wider flex items-center gap-1">
+                      Fecha de Venta
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.saleDate}
+                      onChange={e => setFormData({ ...formData, saleDate: e.target.value })}
+                      className="w-full px-4 py-2 bg-white border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                    />
+                  </div>
+                </>
+              )}
             </div>
           )}
 

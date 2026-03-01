@@ -4,8 +4,11 @@ import { contactService, userService } from './firebase';
 import { ContactForm } from './components/ContactForm';
 import { ContactTable } from './components/ContactTable';
 import { Stats } from './components/Stats';
-import { Plus, Search, ChevronRight, ArrowLeft, Briefcase, CheckCircle, AlertCircle, History, Download, Upload, FileJson, Sparkles, LogIn, Shield, Eye, EyeOff, User as UserIcon, LogOut } from 'lucide-react';
+import { Plus, Search, ChevronRight, ArrowLeft, Briefcase, CheckCircle, AlertCircle, History, Download, Upload, FileJson, Sparkles, LogIn, Shield, Eye, EyeOff, User as UserIcon, LogOut, TrendingUp, DollarSign } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import type { TooltipProps } from 'recharts';
+import type { ValueType, NameType } from 'recharts/types/component/DefaultTooltipContent';
 
 type ViewState = 
   | { type: 'CATEGORIES' }
@@ -180,6 +183,32 @@ export default function App() {
     return stats;
   }, [contacts, currentUser]);
 
+  const revenueData = useMemo(() => {
+    const monthlyRevenue: Record<string, number> = {};
+    const closedContacts = contacts.filter(c => 
+      c.status === 'Cliente' && c.salePrice && c.saleDate &&
+      (currentUser?.role === 'Admin' || currentUser?.canSeeAll || c.createdBy === currentUser?.email)
+    );
+
+    closedContacts.forEach(c => {
+      const date = new Date(c.saleDate!);
+      const monthYear = date.toLocaleString('es-ES', { month: 'short', year: '2-digit' });
+      monthlyRevenue[monthYear] = (monthlyRevenue[monthYear] || 0) + (c.salePrice || 0);
+    });
+
+    return Object.entries(monthlyRevenue)
+      .map(([name, total]) => ({ name, total }))
+      .sort((a, b) => {
+        const [aMonth, aYear] = a.name.split(' ');
+        const [bMonth, bYear] = b.name.split(' ');
+        return new Date(`${aMonth} 20${aYear}`).getTime() - new Date(`${bMonth} 20${bYear}`).getTime();
+      });
+  }, [contacts, currentUser]);
+
+  const totalRevenue = useMemo(() => {
+    return revenueData.reduce((sum, item) => sum + item.total, 0);
+  }, [revenueData]);
+
   const handleAddOrUpdate = async (formData: Omit<Contact, 'id' | 'createdAt'>) => {
     const isDuplicate = contacts.some(c => 
       c.businessName.toLowerCase() === formData.businessName.toLowerCase()
@@ -309,7 +338,7 @@ export default function App() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <Stats total={stats.total} closed={stats.closed} />
+          <Stats total={stats.total} closed={stats.closed} totalRevenue={currentUser?.role === 'Admin' ? totalRevenue : undefined} />
         </div>
 
         <div className="flex flex-col md:flex-row gap-4 mb-8">
@@ -557,6 +586,18 @@ export default function App() {
                   </div>
                 </div>
 
+                {view.type === 'FINISHED_JOBS' && currentUser?.role === 'Admin' && (
+                  <div className="flex items-center gap-4 bg-emerald-50 px-4 py-2 rounded-2xl border border-emerald-100">
+                    <div className="p-2 bg-emerald-500 text-white rounded-xl">
+                      <TrendingUp size={20} />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Ingresos Totales</p>
+                      <p className="text-xl font-black text-emerald-700">${totalRevenue.toLocaleString()}</p>
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                   <select
                     value={statusFilter}
@@ -585,6 +626,57 @@ export default function App() {
                 </div>
               </div>
 
+              {view.type === 'FINISHED_JOBS' && currentUser?.role === 'Admin' && revenueData.length > 0 && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm mb-8"
+                >
+                  <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+                    <TrendingUp size={16} /> Evolución de Ingresos por Mes
+                  </h3>
+                  <div className="h-64 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={revenueData}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                        <XAxis 
+                          dataKey="name" 
+                          axisLine={false} 
+                          tickLine={false} 
+                          tick={{ fontSize: 12, fill: '#9ca3af', fontWeight: 500 }}
+                          dy={10}
+                        />
+                        <YAxis 
+                          axisLine={false} 
+                          tickLine={false} 
+                          tick={{ fontSize: 12, fill: '#9ca3af', fontWeight: 500 }}
+                          tickFormatter={(value) => `$${value >= 1000 ? (value/1000) + 'k' : value}`}
+                        />
+                        <Tooltip 
+                          cursor={{ fill: '#f9fafb' }}
+                          contentStyle={{ 
+                            borderRadius: '16px', 
+                            border: 'none', 
+                            boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+                            padding: '12px'
+                          }}
+                        />formatter={
+                            ((value: number) => [
+                              `$${value.toLocaleString()}`,
+                              'Ingresos'
+                            ]) as any
+                          }
+                        <Bar dataKey="total" radius={[6, 6, 0, 0]} barSize={40}>
+                          {revenueData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={index === revenueData.length - 1 ? '#059669' : '#10b981'} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </motion.div>
+              )}
+
               <ContactTable 
                 contacts={filteredContacts} 
                 currentUser={currentUser!}
@@ -603,6 +695,7 @@ export default function App() {
               setIsFormOpen(false);
               setDuplicateError(null);
             }}
+            currentUser={currentUser!}
           />
         )}
 

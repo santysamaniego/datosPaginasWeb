@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Contact, ContactStatus, User } from '../types';
-import { Trash2, Instagram, Mail, MapPin, Briefcase, ExternalLink, Sparkles, MessageCircle, Save, X, Edit2, Lock, FileText } from 'lucide-react';
+import { Trash2, Instagram, Mail, MapPin, Briefcase, ExternalLink, Sparkles, MessageCircle, Save, X, Edit2, Lock, FileText, DollarSign, Calendar } from 'lucide-react';
 import { contactService } from '../firebase';
 
 interface ContactTableProps {
@@ -75,8 +75,17 @@ export const ContactTable: React.FC<ContactTableProps> = ({ contacts, currentUse
     setEditValues({});
   };
 
-  const handleInputChange = (field: keyof Contact, value: string) => {
-    setEditValues(prev => ({ ...prev, [field]: value }));
+  const handleInputChange = (field: keyof Contact, value: any) => {
+    setEditValues(prev => {
+      let finalValue = value;
+      if (field === 'salePrice') finalValue = Number(value);
+      
+      const updates: any = { ...prev, [field]: finalValue };
+      if (field === 'status' && value === 'Cliente' && !prev.saleDate) {
+        updates.saleDate = new Date().toISOString().split('T')[0];
+      }
+      return updates;
+    });
   };
 
   return (
@@ -171,6 +180,30 @@ export const ContactTable: React.FC<ContactTableProps> = ({ contacts, currentUse
                               className="text-xs text-gray-500 border-b border-gray-200 outline-none bg-transparent resize-none"
                               rows={1}
                             />
+                            {editValues.status === 'Cliente' && currentUser.role === 'Admin' && (
+                              <div className="flex gap-2 mt-1">
+                                <input
+                                  type="number"
+                                  value={editValues.salePrice || ''}
+                                  placeholder="Precio de Venta"
+                                  onChange={(e) => handleInputChange('salePrice', e.target.value)}
+                                  className="text-[10px] font-bold text-emerald-600 border-b border-emerald-200 outline-none bg-transparent w-24"
+                                />
+                                <input
+                                  type="date"
+                                  value={editValues.saleDate || ''}
+                                  onChange={(e) => handleInputChange('saleDate', e.target.value)}
+                                  className="text-[10px] font-bold text-blue-600 border-b border-blue-200 outline-none bg-transparent"
+                                />
+                                <input
+                                  type="url"
+                                  value={editValues.websiteUrl || ''}
+                                  placeholder="Link Web"
+                                  onChange={(e) => handleInputChange('websiteUrl', e.target.value)}
+                                  className="text-[10px] font-bold text-blue-500 border-b border-blue-200 outline-none bg-transparent w-24"
+                                />
+                              </div>
+                            )}
                           </div>
                         ) : (
                           <div className="flex items-center gap-3 text-xs text-gray-400 flex-wrap">
@@ -187,6 +220,16 @@ export const ContactTable: React.FC<ContactTableProps> = ({ contacts, currentUse
                             {contact.observations && (
                               <span className="flex items-center gap-1 text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded italic">
                                 <FileText size={12} className="text-gray-400" /> {contact.observations}
+                              </span>
+                            )}
+                            {contact.status === 'Cliente' && currentUser.role === 'Admin' && contact.salePrice && (
+                              <span className="flex items-center gap-1 text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded font-bold">
+                                <DollarSign size={12} /> {contact.salePrice.toLocaleString()}
+                              </span>
+                            )}
+                            {contact.status === 'Cliente' && currentUser.role === 'Admin' && contact.saleDate && (
+                              <span className="flex items-center gap-1 text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded font-bold">
+                                <Calendar size={12} /> {new Date(contact.saleDate).toLocaleDateString()}
                               </span>
                             )}
                           </div>
@@ -289,7 +332,10 @@ export const ContactTable: React.FC<ContactTableProps> = ({ contacts, currentUse
                         className="text-xs border-b border-blue-500 outline-none bg-transparent"
                       />
                     ) : (
-                      new Date(contact.firstContactDate).toLocaleDateString()
+                      <div className="flex flex-col">
+                        <span className="text-xs font-medium text-gray-400 uppercase">Contacto</span>
+                        <span>{new Date(contact.firstContactDate).toLocaleDateString()}</span>
+                      </div>
                     )}
                   </td>
                   {currentUser.role === 'Admin' && (
