@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Contact, ContactStatus, User } from '../types';
-import { Trash2, Instagram, Mail, MapPin, Briefcase, ExternalLink, Sparkles, MessageCircle, Save, X, Edit2, Lock } from 'lucide-react';
+import { Trash2, Instagram, Mail, MapPin, Briefcase, ExternalLink, Sparkles, MessageCircle, Save, X, Edit2, Lock, FileText } from 'lucide-react';
 import { contactService } from '../firebase';
 
 interface ContactTableProps {
@@ -164,9 +164,16 @@ export const ContactTable: React.FC<ContactTableProps> = ({ contacts, currentUse
                               onChange={(e) => handleInputChange('zone', e.target.value)}
                               className="text-xs text-gray-500 border-b border-gray-200 outline-none bg-transparent"
                             />
+                            <textarea
+                              value={editValues.observations || ''}
+                              placeholder="Observaciones"
+                              onChange={(e) => handleInputChange('observations', e.target.value)}
+                              className="text-xs text-gray-500 border-b border-gray-200 outline-none bg-transparent resize-none"
+                              rows={1}
+                            />
                           </div>
                         ) : (
-                          <div className="flex items-center gap-3 text-xs text-gray-400">
+                          <div className="flex items-center gap-3 text-xs text-gray-400 flex-wrap">
                             {contact.sector && (
                               <span className={`flex items-center gap-1 ${canEdit ? 'cursor-pointer' : ''}`} onClick={() => canEdit && startEditing(contact)}>
                                 <Briefcase size={12} /> {contact.sector}
@@ -175,6 +182,11 @@ export const ContactTable: React.FC<ContactTableProps> = ({ contacts, currentUse
                             {contact.zone && (
                               <span className="flex items-center gap-1">
                                 <MapPin size={12} /> {contact.zone}
+                              </span>
+                            )}
+                            {contact.observations && (
+                              <span className="flex items-center gap-1 text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded italic">
+                                <FileText size={12} className="text-gray-400" /> {contact.observations}
                               </span>
                             )}
                           </div>
