@@ -31,12 +31,6 @@ export const ContactTable: React.FC<ContactTableProps> = ({ contacts, currentUse
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<Partial<Contact>>({});
 
-  const canSeeContact = (contact: Contact) => {
-    if (currentUser.role === 'Admin') return true;
-    if (currentUser.canSeeAll) return true;
-    return contact.createdBy === currentUser.email;
-  };
-
   if (contacts.length === 0) {
     return (
       <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-200">
@@ -67,6 +61,15 @@ export const ContactTable: React.FC<ContactTableProps> = ({ contacts, currentUse
   };
 
   const saveEdit = async (id: string) => {
+    if (editValues.businessName) {
+      const isDuplicate = contacts.some(c => 
+        c.id !== id && c.businessName.toLowerCase() === editValues.businessName?.toLowerCase()
+      );
+      if (isDuplicate) {
+        alert(`Error: Ya existe un negocio con el nombre "${editValues.businessName}".`);
+        return;
+      }
+    }
     await contactService.updateContact(id, editValues);
     setEditingId(null);
     setEditValues({});
@@ -86,6 +89,9 @@ export const ContactTable: React.FC<ContactTableProps> = ({ contacts, currentUse
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Contacto / Redes</th>
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Estado</th>
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Fecha</th>
+              {currentUser.role === 'Admin' && (
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Cargado por</th>
+              )}
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Acciones</th>
             </tr>
           </thead>
@@ -93,12 +99,12 @@ export const ContactTable: React.FC<ContactTableProps> = ({ contacts, currentUse
             {contacts.map((contact) => {
               const newlyAdded = isNew(contact.createdAt);
               const isEditing = editingId === contact.id;
-              const isRestricted = !canSeeContact(contact);
+              const canEdit = currentUser.role === 'Admin' || contact.createdBy === currentUser.email;
 
               return (
                 <tr 
                   key={contact.id} 
-                  className={`hover:bg-gray-50/50 transition-colors group ${newlyAdded ? 'bg-green-50/30' : ''} ${isRestricted ? 'bg-gray-50/50' : ''}`}
+                  className={`hover:bg-gray-50/50 transition-colors group ${newlyAdded ? 'bg-green-50/30' : ''}`}
                 >
                   <td className="px-6 py-4">
                     <div className="flex flex-col gap-1">
@@ -117,13 +123,13 @@ export const ContactTable: React.FC<ContactTableProps> = ({ contacts, currentUse
                           />
                         ) : (
                           <span 
-                            className={`font-bold text-gray-900 ${isRestricted ? 'blur-sm select-none' : 'cursor-pointer'}`} 
-                            onClick={() => !isRestricted && startEditing(contact)}
+                            className={`font-bold text-gray-900 ${canEdit ? 'cursor-pointer' : ''}`} 
+                            onClick={() => canEdit && startEditing(contact)}
                           >
                             {contact.businessName}
                           </span>
                         )}
-                        {contact.websiteUrl && !isEditing && !isRestricted && (
+                        {contact.websiteUrl && !isEditing && (
                           <a 
                             href={contact.websiteUrl} 
                             target="_blank" 
@@ -154,9 +160,9 @@ export const ContactTable: React.FC<ContactTableProps> = ({ contacts, currentUse
                             />
                           </div>
                         ) : (
-                          <div className={`flex items-center gap-3 text-xs text-gray-400 ${isRestricted ? 'blur-sm select-none' : ''}`}>
+                          <div className="flex items-center gap-3 text-xs text-gray-400">
                             {contact.sector && (
-                              <span className="flex items-center gap-1 cursor-pointer" onClick={() => startEditing(contact)}>
+                              <span className={`flex items-center gap-1 ${canEdit ? 'cursor-pointer' : ''}`} onClick={() => canEdit && startEditing(contact)}>
                                 <Briefcase size={12} /> {contact.sector}
                               </span>
                             )}
@@ -171,63 +177,56 @@ export const ContactTable: React.FC<ContactTableProps> = ({ contacts, currentUse
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    {isRestricted ? (
-                      <div className="flex items-center gap-2 text-gray-300">
-                        <Lock size={14} />
-                        <span className="text-xs font-medium italic">Información oculta</span>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center gap-2">
+                        <Instagram size={14} className="text-pink-500" />
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            value={editValues.instagram || ''}
+                            placeholder="Instagram"
+                            onChange={(e) => handleInputChange('instagram', e.target.value)}
+                            className="text-sm text-gray-600 border-b border-gray-200 outline-none bg-transparent flex-1"
+                          />
+                        ) : (
+                          <a 
+                            href={`https://instagram.com/${contact.instagram?.replace('@', '')}`} 
+                            target="_blank" 
+                            rel="noreferrer"
+                            className="text-sm text-gray-600 hover:text-pink-600 font-medium"
+                          >
+                            {contact.instagram || 'Sin Instagram'}
+                          </a>
+                        )}
                       </div>
-                    ) : (
-                      <div className="flex flex-col gap-2">
-                        <div className="flex items-center gap-2">
-                          <Instagram size={14} className="text-pink-500" />
-                          {isEditing ? (
-                            <input
-                              type="text"
-                              value={editValues.instagram || ''}
-                              placeholder="Instagram"
-                              onChange={(e) => handleInputChange('instagram', e.target.value)}
-                              className="text-sm text-gray-600 border-b border-gray-200 outline-none bg-transparent flex-1"
-                            />
-                          ) : (
-                            <a 
-                              href={`https://instagram.com/${contact.instagram?.replace('@', '')}`} 
-                              target="_blank" 
-                              rel="noreferrer"
-                              className="text-sm text-gray-600 hover:text-pink-600 font-medium"
-                            >
-                              {contact.instagram || 'Sin Instagram'}
-                            </a>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <MessageCircle size={14} className="text-emerald-500" />
-                          {isEditing ? (
-                            <input
-                              type="text"
-                              value={editValues.phone || ''}
-                              placeholder="Teléfono"
-                              onChange={(e) => handleInputChange('phone', e.target.value)}
-                              className="text-sm text-gray-600 border-b border-gray-200 outline-none bg-transparent flex-1"
-                            />
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm text-gray-600 font-medium">
-                                {contact.phone || 'Sin teléfono'}
-                              </span>
-                              {contact.phone && (
-                                <button
-                                  onClick={() => handleWhatsAppClick(contact.phone)}
-                                  className="p-1 bg-emerald-50 text-emerald-600 rounded hover:bg-emerald-100 transition-colors"
-                                  title="Enviar WhatsApp"
-                                >
-                                  <MessageCircle size={14} />
-                                </button>
-                              )}
-                            </div>
-                          )}
-                        </div>
+                      <div className="flex items-center gap-2">
+                        <MessageCircle size={14} className="text-emerald-500" />
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            value={editValues.phone || ''}
+                            placeholder="Teléfono"
+                            onChange={(e) => handleInputChange('phone', e.target.value)}
+                            className="text-sm text-gray-600 border-b border-gray-200 outline-none bg-transparent flex-1"
+                          />
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-600 font-medium">
+                              {contact.phone || 'Sin teléfono'}
+                            </span>
+                            {contact.phone && (
+                              <button
+                                onClick={() => handleWhatsAppClick(contact.phone)}
+                                className="p-1 bg-emerald-50 text-emerald-600 rounded hover:bg-emerald-100 transition-colors"
+                                title="Enviar WhatsApp"
+                              >
+                                <MessageCircle size={14} />
+                              </button>
+                            )}
+                          </div>
+                        )}
                       </div>
-                    )}
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     {isEditing ? (
@@ -245,8 +244,8 @@ export const ContactTable: React.FC<ContactTableProps> = ({ contacts, currentUse
                       </select>
                     ) : (
                       <span 
-                        onClick={() => startEditing(contact)}
-                        className={`px-3 py-1 rounded-full text-xs font-bold border cursor-pointer hover:opacity-80 transition-opacity ${statusColors[contact.status]}`}
+                        onClick={() => canEdit && startEditing(contact)}
+                        className={`px-3 py-1 rounded-full text-xs font-bold border ${canEdit ? 'cursor-pointer hover:opacity-80' : ''} transition-opacity ${statusColors[contact.status]}`}
                       >
                         {contact.status}
                       </span>
@@ -264,6 +263,18 @@ export const ContactTable: React.FC<ContactTableProps> = ({ contacts, currentUse
                       new Date(contact.firstContactDate).toLocaleDateString()
                     )}
                   </td>
+                  {currentUser.role === 'Admin' && (
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold text-gray-700 truncate max-w-[120px]" title={contact.createdBy || 'Desconocido'}>
+                          {contact.createdBy === currentUser.email ? 'Yo' : (contact.createdBy?.split('@')[0] || 'Desconocido')}
+                        </span>
+                        <span className="text-[10px] text-gray-400 truncate max-w-[120px]">
+                          {contact.createdBy || 'Carga antigua'}
+                        </span>
+                      </div>
+                    </td>
+                  )}
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
                       {isEditing ? (
@@ -285,7 +296,7 @@ export const ContactTable: React.FC<ContactTableProps> = ({ contacts, currentUse
                         </>
                       ) : (
                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          {!isRestricted && (
+                          {canEdit && (
                             <button
                               onClick={() => startEditing(contact)}
                               className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"

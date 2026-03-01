@@ -89,15 +89,34 @@ export default function App() {
     }
   };
 
-  const stats = useMemo(() => ({
-    total: contacts.length,
-    closed: contacts.filter(c => c.status === 'Cliente').length
-  }), [contacts]);
+  const stats = useMemo(() => {
+    const visibleContacts = contacts.filter(c => 
+      currentUser?.role === 'Admin' || currentUser?.canSeeAll || c.createdBy === currentUser?.email
+    );
+    return {
+      total: visibleContacts.length,
+      closed: visibleContacts.filter(c => c.status === 'Cliente').length
+    };
+  }, [contacts, currentUser]);
 
   const isNew = (createdAt: number) => Date.now() - createdAt < IS_NEW_THRESHOLD;
 
   const filteredContacts = useMemo(() => {
     let result = contacts.filter(contact => {
+      const isOwner = contact.createdBy === currentUser?.email;
+      const isAdmin = currentUser?.role === 'Admin';
+      const hasSeeAll = currentUser?.canSeeAll;
+
+      // Lógica de Privacidad:
+      // 1. Si es el HISTORIAL, es estrictamente individual para CoAdmins.
+      if (view.type === 'HISTORY') {
+        if (!isAdmin && !isOwner) return false;
+      } else {
+        // 2. Para el resto de vistas, respetamos el permiso 'canSeeAll'.
+        const canSee = isAdmin || hasSeeAll || isOwner;
+        if (!canSee) return false;
+      }
+
       const searchLower = searchTerm.toLowerCase();
       const matchesSearch = 
         contact.businessName.toLowerCase().includes(searchLower) ||
@@ -139,12 +158,16 @@ export default function App() {
     });
 
     return result;
-  }, [contacts, searchTerm, view, statusFilter, sortBy]);
+  }, [contacts, searchTerm, view, statusFilter, sortBy, currentUser]);
 
   const categoryStats = useMemo(() => {
     const stats: Record<string, Record<string, { count: number, hasNew: boolean }>> = {};
     
     contacts.forEach(c => {
+      // Aplicar el mismo filtro de privacidad a las estadísticas de las categorías
+      const canSee = currentUser?.role === 'Admin' || currentUser?.canSeeAll || c.createdBy === currentUser?.email;
+      if (!canSee) return;
+
       if (c.status === 'Cliente') return;
       
       if (!stats[c.category]) stats[c.category] = {};
@@ -157,7 +180,7 @@ export default function App() {
     });
 
     return stats;
-  }, [contacts]);
+  }, [contacts, currentUser]);
 
   const handleAddOrUpdate = async (formData: Omit<Contact, 'id' | 'createdAt'>) => {
     const isDuplicate = contacts.some(c => 
