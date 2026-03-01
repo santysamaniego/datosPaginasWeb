@@ -206,28 +206,39 @@ export const ContactTable: React.FC<ContactTableProps> = ({ contacts, currentUse
                         )}
                       </div>
                       <div className="flex items-center gap-2">
-                        <MessageCircle size={14} className="text-emerald-500" />
                         {isEditing ? (
-                          <input
-                            type="text"
-                            value={editValues.phone || ''}
-                            placeholder="Teléfono"
-                            onChange={(e) => handleInputChange('phone', e.target.value)}
-                            className="text-sm text-gray-600 border-b border-gray-200 outline-none bg-transparent flex-1"
-                          />
+                          <>
+                            <MessageCircle size={14} className="text-emerald-500" />
+                            <input
+                              type="text"
+                              value={editValues.phone || ''}
+                              placeholder="Teléfono"
+                              onChange={(e) => handleInputChange('phone', e.target.value)}
+                              className="text-sm text-gray-600 border-b border-gray-200 outline-none bg-transparent flex-1"
+                            />
+                          </>
                         ) : (
                           <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-600 font-medium">
-                              {contact.phone || 'Sin teléfono'}
-                            </span>
-                            {contact.phone && (
-                              <button
-                                onClick={() => handleWhatsAppClick(contact.phone)}
-                                className="p-1 bg-emerald-50 text-emerald-600 rounded hover:bg-emerald-100 transition-colors"
-                                title="Enviar WhatsApp"
-                              >
-                                <MessageCircle size={14} />
-                              </button>
+                            {contact.phone ? (
+                              <>
+                                <button
+                                  onClick={() => handleWhatsAppClick(contact.phone)}
+                                  className="p-1 bg-emerald-50 text-emerald-600 rounded hover:bg-emerald-100 transition-colors"
+                                  title="Enviar WhatsApp"
+                                >
+                                  <MessageCircle size={14} />
+                                </button>
+                                <span className="text-sm text-gray-600 font-medium">
+                                  {contact.phone}
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <MessageCircle size={14} className="text-gray-300" />
+                                <span className="text-sm text-gray-400 font-medium">
+                                  Sin teléfono
+                                </span>
+                              </>
                             )}
                           </div>
                         )}
