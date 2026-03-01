@@ -104,7 +104,13 @@ export const ContactTable: React.FC<ContactTableProps> = ({ contacts, currentUse
               return (
                 <tr 
                   key={contact.id} 
-                  className={`hover:bg-gray-50/50 transition-colors group ${newlyAdded ? 'bg-green-50/30' : ''}`}
+                  className={`hover:bg-gray-50/50 transition-colors group ${
+                    contact.status === 'Cliente' 
+                      ? 'bg-green-100/60 hover:bg-green-200/60' 
+                      : newlyAdded 
+                        ? 'bg-green-50/30' 
+                        : ''
+                  }`}
                 >
                   <td className="px-6 py-4">
                     <div className="flex flex-col gap-1">

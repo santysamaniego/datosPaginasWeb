@@ -135,7 +135,7 @@ export default function App() {
       }
       
       if (view.type === 'SECTOR_LIST') {
-        return matchesSearch && matchesStatus && contact.sector === view.sector && contact.status !== 'Cliente';
+        return matchesSearch && matchesStatus && contact.sector === view.sector;
       }
 
       return false;
@@ -167,8 +167,6 @@ export default function App() {
       // Aplicar el mismo filtro de privacidad a las estadísticas de las categorías
       const canSee = currentUser?.role === 'Admin' || currentUser?.canSeeAll || c.createdBy === currentUser?.email;
       if (!canSee) return;
-
-      if (c.status === 'Cliente') return;
       
       if (!stats[c.category]) stats[c.category] = {};
       if (!stats[c.category][c.sector]) stats[c.category][c.sector] = { count: 0, hasNew: false };
