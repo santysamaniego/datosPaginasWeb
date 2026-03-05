@@ -24,6 +24,7 @@ export const ContactForm: React.FC<ContactFormProps> = ({ onSubmit, initialData,
   sector: initialData?.sector || '',
   category: initialData?.category || '',
   zone: initialData?.zone || '',
+  address: initialData?.address || '',
   instagram: initialData?.instagram || '',
   phone: initialData?.phone || '',
   email: initialData?.email || '',
@@ -33,8 +34,8 @@ export const ContactForm: React.FC<ContactFormProps> = ({ onSubmit, initialData,
   websiteUrl: initialData?.websiteUrl || '',
   salePrice: initialData?.salePrice,
   saleDate: initialData?.saleDate || new Date().toISOString().split('T')[0],
-  createdBy: initialData?.createdBy || currentUser.id 
-});
+  createdBy: initialData?.createdBy || currentUser.id
+});;
 
   const [isCustomSector, setIsCustomSector] = React.useState(false);
   const [customSector, setCustomSector] = React.useState('');
@@ -144,6 +145,17 @@ export const ContactForm: React.FC<ContactFormProps> = ({ onSubmit, initialData,
                 onChange={e => setFormData({ ...formData, zone: e.target.value })}
                 className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                 placeholder="Ej: Palermo, CABA"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Dirección</label>
+              <input
+                type="text"
+                value={formData.address}
+                onChange={e => setFormData({ ...formData, address: e.target.value })}
+                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                placeholder="Ej: Av. Santa Fe 1234"
               />
             </div>
 
