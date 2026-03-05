@@ -68,12 +68,16 @@ export const contactService = {
   addContact: async (contact: Omit<Contact, 'id' | 'createdAt'>, createdBy: string) => {
   const newContact = {
     ...contact,
-    salePrice: contact.salePrice ?? null, // 🔧 evita undefined
     createdAt: Date.now(),
     createdBy
   };
 
-  await addDoc(collection(db, CONTACTS_COLLECTION), newContact);
+  // 🔧 eliminar campos undefined (Firestore no los permite)
+  const cleanContact = Object.fromEntries(
+    Object.entries(newContact).filter(([_, value]) => value !== undefined)
+  );
+
+  await addDoc(collection(db, CONTACTS_COLLECTION), cleanContact);
 },
 
   updateContact: async (id: string, contact: Partial<Contact>) => {
