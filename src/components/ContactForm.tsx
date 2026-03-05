@@ -31,7 +31,7 @@ export const ContactForm: React.FC<ContactFormProps> = ({ onSubmit, initialData,
   firstContactDate: initialData?.firstContactDate || new Date().toISOString().split('T')[0],
   observations: initialData?.observations || '',
   websiteUrl: initialData?.websiteUrl || '',
-  salePrice: initialData?.salePrice,
+  salePrice: initialData?.salePrice ??  0,
   saleDate: initialData?.saleDate || new Date().toISOString().split('T')[0],
   createdBy: initialData?.createdBy || currentUser.id 
 });
