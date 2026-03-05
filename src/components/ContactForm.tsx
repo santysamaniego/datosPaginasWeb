@@ -60,10 +60,15 @@ export const ContactForm: React.FC<ContactFormProps> = ({ onSubmit, initialData,
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const finalData = {
+    const finalData: any = {
       ...formData,
       sector: isCustomSector ? customSector : formData.sector
     };
+    
+    if (finalData.salePrice === undefined) {
+      delete finalData.salePrice;
+    }
+    
     onSubmit(finalData);
   };
 
@@ -227,7 +232,10 @@ export const ContactForm: React.FC<ContactFormProps> = ({ onSubmit, initialData,
                     <input
                       type="number"
                       value={formData.salePrice || ''}
-                      onChange={e => setFormData({ ...formData, salePrice: Number(e.target.value) })}
+                      onChange={e => setFormData({
+                        ...formData,
+                        salePrice: e.target.value ? Number(e.target.value) : undefined
+                      })}
                       className="w-full px-4 py-2 bg-white border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                       placeholder="Ej: 50000"
                     />
