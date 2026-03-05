@@ -26,15 +26,22 @@ export const userService = {
     if (userDoc.exists()) {
       return { id: email, ...userDoc.data() } as User;
     } else {
-  // Default to CoAdmin for new users, except maybe a specific admin email
-        const isAdmin = email === 'ssamaniego065@gmail.com';
-        const newUser: Omit<User, 'id'> = {
-          email,
-          role: isAdmin ? 'Admin' : 'CoAdmin',
-          canSeeAll: isAdmin
-        };
-        await setDoc(userRef, newUser);
-        return { id: email, ...newUser } as User;
+        const ADMIN_EMAIL = 'ssamaniego065@gmail.com';
+          
+        // solo tu mail puede crearse automáticamente
+        if (email === ADMIN_EMAIL) {
+          const newUser: Omit<User, 'id'> = {
+            email,
+            role: 'Admin',
+            canSeeAll: true
+          };
+        
+          await setDoc(userRef, newUser);
+          return { id: email, ...newUser } as User;
+        }
+      
+        // cualquier otro mail queda bloqueado
+        throw new Error('Usuario no autorizado');
       }
   },
 
