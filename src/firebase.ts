@@ -26,12 +26,11 @@ export const userService = {
     if (userDoc.exists()) {
       return { id: email, ...userDoc.data() } as User;
     } else {
-      // Default to CoAdmin for new users, except maybe a specific admin email
-      const isAdmin = email === 'ssamaniego065@gmail.com'; // User's email from context
+      const isAdmin = email === 'ssamaniego065@gmail.com';
       const newUser: Omit<User, 'id'> = {
         email,
         role: isAdmin ? 'Admin' : 'CoAdmin',
-        canSeeAll: isAdmin // Admin sees all by default
+        canSeeAll: isAdmin
       };
       await setDoc(userRef, newUser);
       return { id: email, ...newUser } as User;
@@ -67,17 +66,25 @@ export const contactService = {
   },
 
   addContact: async (contact: Omit<Contact, 'id' | 'createdAt'>, createdBy: string) => {
-    const newContact = {
-      ...contact,
-      createdAt: Date.now(),
-      createdBy
-    };
-    await addDoc(collection(db, CONTACTS_COLLECTION), newContact);
-  },
+  const newContact = {
+    ...contact,
+    salePrice: contact.salePrice ?? null, // 🔧 evita undefined
+    createdAt: Date.now(),
+    createdBy
+  };
+
+  await addDoc(collection(db, CONTACTS_COLLECTION), newContact);
+},
 
   updateContact: async (id: string, contact: Partial<Contact>) => {
     const contactRef = doc(db, CONTACTS_COLLECTION, id);
-    await updateDoc(contactRef, contact);
+
+    // 🔧 misma protección para updates
+    const cleanContact = Object.fromEntries(
+      Object.entries(contact).filter(([_, value]) => value !== undefined)
+    );
+
+    await updateDoc(contactRef, cleanContact);
   },
 
   deleteContact: async (id: string) => {
