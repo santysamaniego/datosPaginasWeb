@@ -15,7 +15,6 @@ export interface Contact {
   sector: string;
   category: string;
   zone: string;
-  address?: string;
   instagram: string;
   phone: string;
   email: string;
