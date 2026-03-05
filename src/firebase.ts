@@ -26,16 +26,16 @@ export const userService = {
     if (userDoc.exists()) {
       return { id: email, ...userDoc.data() } as User;
     } else {
-      // Default to CoAdmin for new users, except maybe a specific admin email
-      const isAdmin = email === 'ssamaniego065@gmail.com'; // User's email from context
-      const newUser: Omit<User, 'id'> = {
-        email,
-        role: isAdmin ? 'Admin' : 'CoAdmin',
-        canSeeAll: isAdmin // Admin sees all by default
-      };
-      await setDoc(userRef, newUser);
-      return { id: email, ...newUser } as User;
-    }
+  // Default to CoAdmin for new users, except maybe a specific admin email
+        const isAdmin = email === 'ssamaniego065@gmail.com';
+        const newUser: Omit<User, 'id'> = {
+          email,
+          role: isAdmin ? 'Admin' : 'CoAdmin',
+          canSeeAll: isAdmin
+        };
+        await setDoc(userRef, newUser);
+        return { id: email, ...newUser } as User;
+      }
   },
 
   updateUserPermission: async (email: string, canSeeAll: boolean) => {
