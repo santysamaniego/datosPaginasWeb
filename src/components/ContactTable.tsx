@@ -173,13 +173,6 @@ export const ContactTable: React.FC<ContactTableProps> = ({ contacts, currentUse
                               onChange={(e) => handleInputChange('zone', e.target.value)}
                               className="text-xs text-gray-500 border-b border-gray-200 outline-none bg-transparent"
                             />
-                            <input
-                              type="text"
-                              value={editValues.address || ''}
-                              placeholder="Dirección"
-                              onChange={(e) => handleInputChange('address', e.target.value)}
-                              className="text-xs text-gray-500 border-b border-gray-200 outline-none bg-transparent"
-                            />
                             <textarea
                               value={editValues.observations || ''}
                               placeholder="Observaciones"
@@ -222,11 +215,6 @@ export const ContactTable: React.FC<ContactTableProps> = ({ contacts, currentUse
                             {contact.zone && (
                               <span className="flex items-center gap-1">
                                 <MapPin size={12} /> {contact.zone}
-                              </span>
-                            )}
-                            {contact.address && (
-                              <span className="flex items-center gap-1">
-                                <MapPin size={12} className="text-blue-400" /> {contact.address}
                               </span>
                             )}
                             {contact.observations && (
