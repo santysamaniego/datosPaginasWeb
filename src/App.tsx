@@ -7,8 +7,6 @@ import { Stats } from './components/Stats';
 import { Plus, Search, ChevronRight, ArrowLeft, Briefcase, CheckCircle, AlertCircle, History, Download, Upload, FileJson, Sparkles, LogIn, Shield, Eye, EyeOff, User as UserIcon, LogOut, TrendingUp, DollarSign } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import type { TooltipProps } from 'recharts';
-import type { ValueType, NameType } from 'recharts/types/component/DefaultTooltipContent';
 
 type ViewState = 
   | { type: 'CATEGORIES' }
@@ -660,12 +658,13 @@ export default function App() {
                             boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
                             padding: '12px'
                           }}
-                        />formatter={
+                          formatter={
                             ((value: number) => [
                               `$${value.toLocaleString()}`,
                               'Ingresos'
                             ]) as any
                           }
+                        />
                         <Bar dataKey="total" radius={[6, 6, 0, 0]} barSize={40}>
                           {revenueData.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={index === revenueData.length - 1 ? '#059669' : '#10b981'} />
